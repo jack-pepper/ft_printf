@@ -6,7 +6,7 @@
 /*   By: mmalie <mmalie@student.42nice.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/14 12:22:43 by mmalie            #+#    #+#             */
-/*   Updated: 2024/11/15 11:04:36 by mmalie           ###   ########.fr       */
+/*   Updated: 2024/11/15 10:36:17 by mmalie           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,9 +69,9 @@
 int	ft_printf(const char *format, ...)
 {
 	va_list	args;
-	char	*flags_set;
+	char	*set;
 
-	flags_set = "# +";
+	set = "";
 	// Init list
 	va_start(args, format);
 	if (!format)
@@ -81,13 +81,15 @@ int	ft_printf(const char *format, ...)
 	{
 		if (*format == '%')
 		{
-			manage_conv_spec(format, args, flags_set);
+			manage_conv_spec(format, args);
 		}
 		else
 		{
-			write(1, &(*format), 1);
+			// just copy the char
 		}
-		format + 1; // or more if flags...
+		format++;
+
+
 	}
 	// Clean list
 	va_end(args);
@@ -95,19 +97,17 @@ int	ft_printf(const char *format, ...)
 
 }
 
-XXX	manage_conv_spec(char *format, va_list args, char *flags_set)
+XXX	manage_conv_spec(char *format, va_list args)
 {
 	char *next_i;
 
 	next_i = format + 1;
-	/*if (*next_i == xXXXX) // is_in_set
+	if (*next_i == xXXXX)
 	{
 		va_arg(args, xx)
 	}
-	*/
-	if (*next_i == 'c')
+	else if (*next_i == 'c')
 		va_arg(argc, char);
-	/*
 	else if (*next_i == 's')
 	{
 	//
@@ -136,8 +136,9 @@ XXX	manage_conv_spec(char *format, va_list args, char *flags_set)
 	else if (*next_i == '%')
 	{
 	}
-	*/
 
+
+	
 /* 
  * - c: converted to an unsigned char and the resulting char is written
 
