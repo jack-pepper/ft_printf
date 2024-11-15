@@ -12,6 +12,7 @@
 
 #include "libft.h"
 #include <stdarg.h>
+#include <stdio.h>
 /* 
  * Custom implementation of print_f().
  *
@@ -27,6 +28,11 @@
  *	%%: Prints a percent sign.
 */
 
+int	ft_printf(const char *format, ...);
+int	spec_conv(const char *format, va_list args, char *flags, size_t *ch_writ);
+size_t	ft_putchar_fd_count(char c, int fd);
+size_t	ft_putstr_fd_count(char *s, int fd);
+size_t	ft_putnbr_fd_count(int n, int fd);
 
 /* Format of the format string
        The format string is a character string, beginning and ending in its initial shift state, if any.  The  format
@@ -66,56 +72,72 @@
        da_DK locale.
       */
 
+int	main(void)
+{
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%c\n", 'x'), ft_printf("%c\n", 'x'));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s\n", "One string"), ft_printf("%s\n", "One string"));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s - %s\n", "String 1", "String 2"), ft_printf("%s - %s\n", "String 1", "String 2"));
+
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", 1), ft_printf("%d\n", 1));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -12), ft_printf("%d\n", -12));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -1234567), ft_printf("%d\n", -1234567));
+}
+
 int	ft_printf(const char *format, ...)
 {
 	va_list	args;
-	char	*flags_set;
+	char	*flags;
+	size_t	ch_writ;
 
-	flags_set = "# +";
-	// Init list
+	flags = "# +";
 	va_start(args, format);
 	if (!format)
 		return (-1);
-	va_arg(args, format);
+	ch_writ = 0;
 	while (*format)
 	{
 		if (*format == '%')
 		{
-			manage_conv_spec(format, args, flags_set);
+			if (spec_conv(format, args, flags, &ch_writ) == -1)
+				return (-1);
+			format++;
 		}
 		else
 		{
 			write(1, &(*format), 1);
+			ch_writ++;
 		}
-		format + 1; // or more if flags...
+		format++; // or more if flags...
 	}
-	// Clean list
 	va_end(args);
-	return (// total of char returned with the null byte);
-
+	return (ch_writ);
 }
 
-XXX	manage_conv_spec(char *format, va_list args, char *flags_set)
+int	spec_conv(const char *format, va_list args, char *flags, size_t *ch_writ)
 {
-	char *next_i;
+	const char	*next_i;
+	//nb_of_params (% + flags + spec conv...))
 
 	next_i = format + 1;
-	/*if (*next_i == xXXXX) // is_in_set
+	if (!flags) // is_in_set(flags)
 	{
-		va_arg(args, xx)
+		ft_putstr_fd("next_i is in set", 2);
+		//manage_flags();
+		//va_arg(args, xx) // here: hold the number of char used for param to substract them in the end
 	}
-	*/
 	if (*next_i == 'c')
-		va_arg(argc, char);
-	/*
+	{
+		*ch_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
+	}
 	else if (*next_i == 's')
 	{
-	//
+		*ch_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
 	}
 	else if (*next_i == 'd')
 	{
-	//
+		*ch_writ += ft_putnbr_fd_count(va_arg(args, int), 1);
 	}
+	/*
 	else if (*next_i == 'i')
 	{
 	//
@@ -137,6 +159,11 @@ XXX	manage_conv_spec(char *format, va_list args, char *flags_set)
 	{
 	}
 	*/
+	//len = ft_strlen(arg);
+	//write(1, &arg, 1); 
+	
+	return (0); // plutot pointer to where we are after
+}
 
 /* 
  * - c: converted to an unsigned char and the resulting char is written
@@ -163,9 +190,8 @@ XXX	manage_conv_spec(char *format, va_list args, char *flags_set)
  *
  * - %%	A '%' is written.  No argument is converted.  The complete conversion specification is '%%'.
 */
-}
 
-XXX	manage_flags();
+/* XXX	manage_flags();
 {
 
 	// The character % is followed by zero or more of the following flags:
@@ -174,30 +200,26 @@ XXX	manage_flags();
 BONUS: Manage all the following flags: # (space) and +
 
 	if (*param + 1 == '#')
-	/* The value should be converted to an "alternate form". 
+	 The value should be converted to an "alternate form". 
 		For x and X conversions, a nonzero result has the string "0x" (or "0X" for X conversions) prepended to it.  		For other conversions of this project, the result is undefined.
-	*/
-
 	if (*param + 1 == ' ')
-	/* (a  space)  A blank should be left before a positive number (or empty string) produced by a signed con‐
+	 (a  space)  A blank should be left before a positive number (or empty string) produced by a signed con‐
               version.
-	*/
-
-	if (*param + 1 == '+')
-	/* A sign (+ or -) should always be placed before a number produced by a signed conversion.  By default, a
+		if (*param + 1 == '+')
+	 A sign (+ or -) should always be placed before a number produced by a signed conversion.  By default, a
               sign is used only for negative numbers.  A + overrides a space if both are used.
-        */	
+      	
 
 BONUS: Manage any combination of the following flags: '-0.' and the field minimum width under all conversions
 
 	if (*param + 1 == '0')
-	/* The value should be zero padded.  For d, i, o, u, x, X, a, A, e, E, f, F, g,  and  G  conversions,  the
+	* The value should be zero padded.  For d, i, o, u, x, X, a, A, e, E, f, F, g,  and  G  conversions,  the
               converted value is padded on the left with zeros rather than blanks.  If the 0 and - flags both appear,
               the 0 flag is ignored.  If a precision is given with a numeric conversion (d, i, o, u, x, and X), the 0
               flag is ignored.  For other conversions, the behavior is undefined.
-	*/
+
 	if (*param + 1 == '-')
-	/* The  converted  value  is  to be left adjusted on the field boundary.  (The default is right justifica‐
+ The  converted  value  is  to be left adjusted on the field boundary.  (The default is right justifica‐
               tion.)  The converted value is padded on the right with blanks, rather than on the left with blanks  or
               zeros.  A - overrides a 0 if both are given.
 	*/
@@ -223,4 +245,49 @@ BONUS: Manage any combination of the following flags: '-0.' and the field minimu
        from a string for s and S conversions.
 */
 
+
+
+size_t	ft_putchar_fd_count(char c, int fd)
+{
+	write(fd, &c, 1);
+	return (1);
+}
+
+size_t	ft_putstr_fd_count(char *s, int fd)
+{
+	size_t  i;
+
+	i = 0;
+	if (s != NULL)
+	{
+		while (s[i] != '\0')
+		{
+			write(fd, &s[i], 1);
+			i++;
+		}
+	}
+	return (i);
+}
+
+size_t    ft_putnbr_fd_count(int n, int fd)
+{
+	size_t	i;
+
+	i = 0;
+        if (n == -2147483648)
+        {
+                i += ft_putstr_fd_count("-2147483648", fd);
+                return (i);
+        }
+        if (n < 0)
+        {
+                i += ft_putchar_fd_count('-', fd);
+                n = -n;
+        }
+        if (n > 9)
+        {
+                i += ft_putnbr_fd_count(n / 10, fd);
+        }
+        i += ft_putchar_fd_count((n % 10) + '0', fd);
+	return (i);
 }
