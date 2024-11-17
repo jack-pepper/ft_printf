@@ -19,7 +19,7 @@
  * This version handles the following conversions and writes to stdout:
  *	%c: Prints a single character.
  *	%s: Prints a string (as defined by the common C convention).
- *	%p:
+ *	%p: Prints the void * pointer argument in hexadecimal (as if by %#x or %#lx) 
  *	%d: Prints a decimal (base 10) number.
  *	%i: Prints an integer in base 10.
  *	%u: Prints an unsigned decimal (base 10) number.
@@ -29,10 +29,15 @@
 */
 
 int	ft_printf(const char *format, ...);
-int	spec_conv(const char *format, va_list args, char *flags, size_t *ch_writ);
+int	spec_conv(const char *format, va_list args, char *flags, size_t *B_writ);
 size_t	ft_putchar_fd_count(char c, int fd);
 size_t	ft_putstr_fd_count(char *s, int fd);
 size_t	ft_putnbr_fd_count(int n, int fd);
+char	*ft_itohex(char *dest, unsigned long nb, char style);
+void	hex_set_case(char style, int *case_var);
+char	*hex_handle_zero(char *hex_value, char style);
+char	*hex_format_string(int i, char *hex_value, char style);
+char	*ft_strrev(char *str);
 
 /* Format of the format string
        The format string is a character string, beginning and ending in its initial shift state, if any.  The  format
@@ -74,6 +79,10 @@ size_t	ft_putnbr_fd_count(int n, int fd);
 
 int	main(void)
 {
+	int	whatever = 5;
+	printf("Pt: %p \n", &whatever);
+	int	*whatever_p = &whatever;
+	/*
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%c\n", 'x'), ft_printf("%c\n", 'x'));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s\n", "One string"), ft_printf("%s\n", "One string"));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s - %s\n", "String 1", "String 2"), ft_printf("%s - %s\n", "String 1", "String 2"));
@@ -81,43 +90,53 @@ int	main(void)
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", 1), ft_printf("%d\n", 1));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -12), ft_printf("%d\n", -12));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -1234567), ft_printf("%d\n", -1234567));
+	*/
+
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %p\n", whatever_p), ft_printf("ft %p\n", whatever_p));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 36453), ft_printf("ft %X\n", 36453));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 777), ft_printf("ft %X\n", 777));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 15), ft_printf("ft %X\n", 15));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %x\n", 0), ft_printf("ft %x\n", 0));
+
 }
 
 int	ft_printf(const char *format, ...)
 {
 	va_list	args;
 	char	*flags;
-	size_t	ch_writ;
+	size_t	B_writ;
 
 	flags = "# +";
 	va_start(args, format);
 	if (!format)
 		return (-1);
-	ch_writ = 0;
+	B_writ = 0;
 	while (*format)
 	{
 		if (*format == '%')
 		{
-			if (spec_conv(format, args, flags, &ch_writ) == -1)
+			if (spec_conv(format, args, flags, &B_writ) == -1)
 				return (-1);
 			format++;
 		}
 		else
 		{
 			write(1, &(*format), 1);
-			ch_writ++;
+			B_writ++;
 		}
 		format++; // or more if flags...
 	}
 	va_end(args);
-	return (ch_writ);
+	return (B_writ);
 }
 
-int	spec_conv(const char *format, va_list args, char *flags, size_t *ch_writ)
+int	spec_conv(const char *format, va_list args, char *flags, size_t *B_writ)
 {
 	const char	*next_i;
+	char		*hex_value;
 	//nb_of_params (% + flags + spec conv...))
 
+	hex_value = NULL;
 	next_i = format + 1;
 	if (!flags) // is_in_set(flags)
 	{
@@ -127,45 +146,131 @@ int	spec_conv(const char *format, va_list args, char *flags, size_t *ch_writ)
 	}
 	if (*next_i == 'c')
 	{
-		*ch_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
+		*B_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
 	}
 	else if (*next_i == 's')
 	{
-		*ch_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
+		*B_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
 	}
-	else if (*next_i == 'd')
+	else if (*next_i == 'i' || *next_i == 'd')
 	{
-		*ch_writ += ft_putnbr_fd_count(va_arg(args, int), 1);
-	}
-	/*
-	else if (*next_i == 'i')
-	{
-	//
+		*B_writ += ft_putnbr_fd_count(va_arg(args, int), 1);
 	}
 	else if (*next_i == 'p')
-	{
-	//
+	{	
+		hex_value = ft_itohex(hex_value, va_arg(args, unsigned long), 'p');
+		*B_writ += ft_putstr_fd_count(hex_value, 1);
+	//NB: the address shouldn't be truncated...
 	}
 	else if (*next_i == 'u')
 	{
+		*B_writ += ft_putnbr_fd_count(va_arg(args, unsigned int), 1);
 	}
-	else if (*next_i == 'x')
+	else if (*next_i == 'x' || *next_i == 'X')
 	{
-	}
-	else if (*next_i == 'X')
-	{
+		hex_value = ft_itohex(hex_value, va_arg(args, unsigned int), *next_i);
+		*B_writ += ft_putstr_fd_count(hex_value, 1);
 	}
 	else if (*next_i == '%')
 	{
-	}
-	*/
-	//len = ft_strlen(arg);
-	//write(1, &arg, 1); 
-	
+		*B_writ += ft_putchar_fd_count('%', 1);
+	} 
+	if (hex_value != NULL)
+		free(hex_value);
 	return (0); // plutot pointer to where we are after
 }
 
-/* 
+char	*ft_itohex(char *dest, unsigned long nb, char style)
+{
+	char		hex_value[20] = {};
+	unsigned long	quotient;
+	unsigned long	remainder;
+	int		i;
+	int		case_var;
+
+	if (nb == 0)
+		return (hex_handle_zero(hex_value, style)); // Trouble herem check agai	
+	hex_set_case(style, &case_var);
+	quotient = nb;
+	i = 0;
+	while (quotient != 0)
+	{
+		remainder = quotient % 16;
+		if (remainder >= 10 && remainder <= 15)
+			hex_value[i] = (char)remainder + case_var;
+		else if (remainder < 10)
+			hex_value[i] = (char)remainder + '0';
+		quotient = quotient / 16;
+		i++;
+	}
+	//printf("Input string before format: %s\n", hex_value); // Debug
+	hex_format_string(i, hex_value, style);
+	//printf("Input string before ft_strdup: %s\n", hex_value); // Debug	
+	dest = ft_strdup(hex_value);
+	return (dest);
+}
+
+void	hex_set_case(char style, int *case_var)
+{
+	if (!case_var || !style)
+		return ;
+	if (style == 'X' || style == '#')
+		*case_var = 'A' - 10;
+	else
+		*case_var = 'a' - 10;
+}
+
+char	*hex_handle_zero(char *hex_value, char style)
+{
+	hex_value[0] = '0';
+	if (style == 'X' || style == '#')
+		hex_value[1] = 'X';
+	else
+		hex_value[1] = 'x';
+	hex_value[2] = '0';
+	return (hex_value);
+}
+
+char	*hex_format_string(int i, char *hex_value, char style)
+{
+	if (style == 'p' || style == '#')
+	{
+		if (style == 'p')
+			hex_value[i] = 'x';
+		else if (style == '#')
+			hex_value[i] = 'X';
+		hex_value[i + 1] = '0';	
+	}
+	ft_strrev(hex_value);
+	hex_value[i + 2] = '\0';
+	return (hex_value);
+}
+
+char	*ft_strrev(char *str)
+{
+	char	*first;
+	char	*last;
+	char	temp;
+
+	if (str == NULL || *str == '\0')
+		return (str);
+	first = str;
+	last = str;
+	while (*last != '\0')
+		last++;
+	last--;
+	while (first < last)
+	{
+		temp = *first;
+		*first = *last;
+		*last = temp;
+		first++;
+		last--;
+	}
+	return (str);
+}
+
+/*
  * - c: converted to an unsigned char and the resulting char is written
 
  * - s: the const char * arg is expected to be a pointer to an array of character type (pointer to a string)
@@ -193,6 +298,8 @@ int	spec_conv(const char *format, va_list args, char *flags, size_t *ch_writ)
 
 /* XXX	manage_flags();
 {
+reater than the size of the array, the array must contain a terminating null byte.]
+ *   
 
 	// The character % is followed by zero or more of the following flags:
 	// NB: %%?
@@ -243,7 +350,8 @@ BONUS: Manage any combination of the following flags: '-0.' and the field minimu
        sions, the number of digits to appear after the radix character for a, A, e, E, f, and F conversions, the max‐
        imum number of significant digits for g and G conversions, or the maximum number of characters to  be  printed
        from a string for s and S conversions.
-*/
+reater than the size of the array, the array must contain a terminating null byte.*/   
+
 
 
 
