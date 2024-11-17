@@ -10,6 +10,11 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+
+// I must pass next_i in every procedure of spec_conv. Maybe with another local variable?
+
+
+
 #include "libft.h"
 #include <stdarg.h>
 #include <stdio.h>
@@ -29,7 +34,10 @@
 */
 
 int	ft_printf(const char *format, ...);
-int	spec_conv(const char *format, va_list args, char *flags, size_t *B_writ);
+const char	*spec_conv(const char *format, va_list args, size_t *B_writ);
+void	spec_conv_num(const char *format, va_list args, char *flags, size_t *B_writ);
+void	spec_conv_hex(const char *format, va_list args, char *flags, size_t *B_writ);
+void	spec_conv_txt(const char *format, va_list args, size_t *B_writ);
 size_t	ft_putchar_fd_count(char c, int fd);
 size_t	ft_putstr_fd_count(char *s, int fd);
 size_t	ft_putnbr_fd_count(int n, int fd);
@@ -87,27 +95,28 @@ int	main(void)
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%c\n", 'x'), ft_printf("%c\n", 'x'));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s\n", "One string"), ft_printf("%s\n", "One string"));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s - %s\n", "String 1", "String 2"), ft_printf("%s - %s\n", "String 1", "String 2"));
+*/
 
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", 1), ft_printf("%d\n", 1));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -12), ft_printf("%d\n", -12));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d - %d\n", -1234567, 777), ft_printf("%d - %d\n", -1234567, 777));
 	
-*/
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", 1), ft_printf("%d\n", 1));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%+d\n", 12), ft_printf("%+d\n", 12));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("% d\n% d\n", -1234567, 777), ft_printf("% d\n% d\n", -1234567, 777));
+
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %p\n", void_p), ft_printf("ft %p\n", void_p));
-	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 36453), ft_printf("ft %X\n", 36453));
-	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 777), ft_printf("ft %X\n", 777));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %#X\n", 36453), ft_printf("ft %#X\n", 36453));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %#x\n", 777), ft_printf("ft %#x\n", 777));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 15), ft_printf("ft %X\n", 15));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %x\n", 0), ft_printf("ft %x\n", 0));
-
 }
 
 int	ft_printf(const char *format, ...)
 {
 	va_list	args;
-	char	*flags;
 	size_t	B_writ;
 
-	flags = "# +";
 	va_start(args, format);
 	if (!format)
 		return (-1);
@@ -116,58 +125,105 @@ int	ft_printf(const char *format, ...)
 	{
 		if (*format == '%')
 		{
-			if (spec_conv(format, args, flags, &B_writ) == -1)
-				return (-1);
-			format++;
+			format = spec_conv(format, args, &B_writ);
 		}
 		else
 		{
 			write(1, &(*format), 1);
 			B_writ++;
 		}
-		format++; // or more if flags...
+		format++;
 	}
 	va_end(args);
 	return (B_writ);
 }
 
-int	spec_conv(const char *format, va_list args, char *flags, size_t *B_writ)
-{
+const char	*spec_conv(const char *format, va_list args, size_t *B_writ)
+{	
 	const char	*next_i;
+	char		flags[10] = {}; // moduler en finalisation
+	
+	next_i = format + 1;
+	while (*next_i == '#' || *next_i == ' ' || *next_i == '+')
+	{
+		if (*next_i == '#')
+			flags[0] = '#';
+		if (*next_i == ' ')
+			flags[1] = ' ';
+		if (*next_i == '+')
+			flags[2] = '+';
+		next_i++;
+	}
+	if (*next_i == 'd' || *next_i == 'i' || *next_i == 'u')
+		spec_conv_num(next_i, args, flags, B_writ);
+	else if (*next_i == 'p' || *next_i == 'x' || *next_i == 'X')
+		spec_conv_hex(next_i, args, flags, B_writ);
+	else if (*next_i == 's' || *next_i == 'c' || *next_i == '%')
+		spec_conv_txt(next_i, args, B_writ);
+	return (next_i);
+}
+
+void	spec_conv_num(const char *next_i, va_list args, char *flags, size_t *B_writ)
+{
+	int	current_arg;
+
+	if (*next_i == 'i' || *next_i == 'd')
+	{
+		current_arg = va_arg(args, int);
+		if (flags[1] == ' ' && current_arg >= 0 && flags[2] != '+')
+		{
+			*B_writ += ft_putchar_fd_count(' ', 1);
+			*B_writ += ft_putnbr_fd_count(current_arg, 1);
+		}
+		else if (flags[2] == '+' && current_arg >= 0)
+		{
+			*B_writ += ft_putchar_fd_count('+', 1);
+			*B_writ += ft_putnbr_fd_count(current_arg, 1);
+		}
+		else
+			*B_writ += ft_putnbr_fd_count(current_arg, 1);
+	}
+	else if (*next_i == 'u')
+		*B_writ += ft_putnbr_fd_count(va_arg(args, unsigned int), 1);
+}
+
+void	spec_conv_hex(const char *next_i, va_list args, char *flags, size_t *B_writ)
+{
 	char		*hex_value;
-	//nb_of_params (% + flags + spec conv...))
 
 	hex_value = NULL;
-	next_i = format + 1;
-	if (!flags) // is_in_set(flags)
-	{
-		ft_putstr_fd("next_i is in set", 2);
-		//manage_flags();
-		//va_arg(args, xx) // here: hold the number of char used for param to substract them in the end
-	}
-	if (*next_i == 'i' || *next_i == 'd')
-		*B_writ += ft_putnbr_fd_count(va_arg(args, int), 1);
-	else if (*next_i == 'c')
-		*B_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
-	else if (*next_i == 's')
-		*B_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
-	else if (*next_i == 'p')
+	if (*next_i == 'p')
 	{	
 		hex_value = ft_itohex(hex_value, va_arg(args, unsigned long), 'p');
 		*B_writ += ft_putstr_fd_count(hex_value, 1);
 	}
-	else if (*next_i == 'u')
-		*B_writ += ft_putnbr_fd_count(va_arg(args, unsigned int), 1);
+
 	else if (*next_i == 'x' || *next_i == 'X')
 	{
-		hex_value = ft_itohex(hex_value, va_arg(args, unsigned int), *next_i);
+		if (flags[0] == '#')
+			hex_value = ft_itohex(hex_value, va_arg(args, unsigned int), '#');
+		else
+			hex_value = ft_itohex(hex_value, va_arg(args, unsigned int), *next_i);
 		*B_writ += ft_putstr_fd_count(hex_value, 1);
 	}
-	else if (*next_i == '%')
-		*B_writ += ft_putchar_fd_count('%', 1);
 	if (hex_value != NULL)
 		free(hex_value);
-	return (0); // plutot pointer to where we are after
+}
+
+void	spec_conv_txt(const char *next_i, va_list args, size_t *B_writ)
+{
+	if (*next_i == 'c')
+	{
+		*B_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
+	}
+	else if (*next_i == 's')
+	{	
+		*B_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
+	}
+	else if (*next_i == '%')
+	{
+		*B_writ += ft_putchar_fd_count('%', 1);
+	}
 }
 
 char	*ft_itohex(char *dest, unsigned long nb, char style)
@@ -283,21 +339,7 @@ char	*hex_format_string(int i, char *hex_value, char style)
 reater than the size of the array, the array must contain a terminating null byte.]
  *   
 
-	// The character % is followed by zero or more of the following flags:
-	// NB: %%?
 
-BONUS: Manage all the following flags: # (space) and +
-
-	if (*param + 1 == '#')
-	 The value should be converted to an "alternate form". 
-		For x and X conversions, a nonzero result has the string "0x" (or "0X" for X conversions) prepended to it.  		For other conversions of this project, the result is undefined.
-	if (*param + 1 == ' ')
-	 (a  space)  A blank should be left before a positive number (or empty string) produced by a signed con‐
-              version.
-		if (*param + 1 == '+')
-	 A sign (+ or -) should always be placed before a number produced by a signed conversion.  By default, a
-              sign is used only for negative numbers.  A + overrides a space if both are used.
-      	
 
 BONUS: Manage any combination of the following flags: '-0.' and the field minimum width under all conversions
 
