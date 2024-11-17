@@ -81,18 +81,19 @@ int	main(void)
 {
 	int	whatever = 5;
 	printf("Pt: %p \n", &whatever);
-	int	*whatever_p = &whatever;
-	/*
+	int	*void_p = NULL;
+	//	int	*whatever_p = &whatever;
+/*	
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%c\n", 'x'), ft_printf("%c\n", 'x'));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s\n", "One string"), ft_printf("%s\n", "One string"));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%s - %s\n", "String 1", "String 2"), ft_printf("%s - %s\n", "String 1", "String 2"));
 
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", 1), ft_printf("%d\n", 1));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -12), ft_printf("%d\n", -12));
-	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d\n", -1234567), ft_printf("%d\n", -1234567));
-	*/
-
-	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %p\n", whatever_p), ft_printf("ft %p\n", whatever_p));
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("%d - %d\n", -1234567, 777), ft_printf("%d - %d\n", -1234567, 777));
+	
+*/
+	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %p\n", void_p), ft_printf("ft %p\n", void_p));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 36453), ft_printf("ft %X\n", 36453));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 777), ft_printf("ft %X\n", 777));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", printf("pr %X\n", 15), ft_printf("ft %X\n", 15));
@@ -144,37 +145,26 @@ int	spec_conv(const char *format, va_list args, char *flags, size_t *B_writ)
 		//manage_flags();
 		//va_arg(args, xx) // here: hold the number of char used for param to substract them in the end
 	}
-	if (*next_i == 'c')
-	{
-		*B_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
-	}
-	else if (*next_i == 's')
-	{
-		*B_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
-	}
-	else if (*next_i == 'i' || *next_i == 'd')
-	{
+	if (*next_i == 'i' || *next_i == 'd')
 		*B_writ += ft_putnbr_fd_count(va_arg(args, int), 1);
-	}
+	else if (*next_i == 'c')
+		*B_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
+	else if (*next_i == 's')
+		*B_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
 	else if (*next_i == 'p')
 	{	
 		hex_value = ft_itohex(hex_value, va_arg(args, unsigned long), 'p');
 		*B_writ += ft_putstr_fd_count(hex_value, 1);
-	//NB: the address shouldn't be truncated...
 	}
 	else if (*next_i == 'u')
-	{
 		*B_writ += ft_putnbr_fd_count(va_arg(args, unsigned int), 1);
-	}
 	else if (*next_i == 'x' || *next_i == 'X')
 	{
 		hex_value = ft_itohex(hex_value, va_arg(args, unsigned int), *next_i);
 		*B_writ += ft_putstr_fd_count(hex_value, 1);
 	}
 	else if (*next_i == '%')
-	{
 		*B_writ += ft_putchar_fd_count('%', 1);
-	} 
 	if (hex_value != NULL)
 		free(hex_value);
 	return (0); // plutot pointer to where we are after
@@ -189,7 +179,7 @@ char	*ft_itohex(char *dest, unsigned long nb, char style)
 	int		case_var;
 
 	if (nb == 0)
-		return (hex_handle_zero(hex_value, style)); // Trouble herem check agai	
+		return (hex_handle_zero(hex_value, style));	
 	hex_set_case(style, &case_var);
 	quotient = nb;
 	i = 0;
@@ -222,13 +212,29 @@ void	hex_set_case(char style, int *case_var)
 
 char	*hex_handle_zero(char *hex_value, char style)
 {
-	hex_value[0] = '0';
-	if (style == 'X' || style == '#')
-		hex_value[1] = 'X';
-	else
-		hex_value[1] = 'x';
-	hex_value[2] = '0';
-	return (hex_value);
+	char	*dest;
+	int	i;
+
+	i = 0;
+	hex_value[i] = '0';
+	if (style == 'p')
+	{
+		hex_value[i] = '(';
+		hex_value[i + 1] = 'n';
+		hex_value[i + 2] = 'i';
+		hex_value[i + 3] = 'l';
+		hex_value[i + 4] = ')';
+		i = 4;
+	}
+	else if (style == '#')
+	{
+		hex_value[i + 1] = 'X';
+		hex_value[i + 2] = '0';
+		i = 2;
+	}
+	hex_value[i + 1] = '\0';
+	dest = ft_strdup(hex_value);
+	return (dest);
 }
 
 char	*hex_format_string(int i, char *hex_value, char style)
@@ -244,30 +250,6 @@ char	*hex_format_string(int i, char *hex_value, char style)
 	ft_strrev(hex_value);
 	hex_value[i + 2] = '\0';
 	return (hex_value);
-}
-
-char	*ft_strrev(char *str)
-{
-	char	*first;
-	char	*last;
-	char	temp;
-
-	if (str == NULL || *str == '\0')
-		return (str);
-	first = str;
-	last = str;
-	while (*last != '\0')
-		last++;
-	last--;
-	while (first < last)
-	{
-		temp = *first;
-		*first = *last;
-		*last = temp;
-		first++;
-		last--;
-	}
-	return (str);
 }
 
 /*
