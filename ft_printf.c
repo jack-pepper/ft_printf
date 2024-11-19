@@ -50,12 +50,12 @@ int	main(void)
 		ft_printf("%d - %d\n", -1234567, 777));
 	
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", 
-		printf("%d\n", 1), ft_printf("%d\n", 1));
+		printf("%u\n", -1), ft_printf("%u\n", -1));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", 
-		printf("%+d\n", 12), ft_printf("%+d\n", 12));
+		printf("%u\n", -12), ft_printf("%u\n", -12));
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", 
-		printf("% d\n% d\n", -1234567, 777), 
-		ft_printf("% d\n% d\n", -1234567, 777));
+		printf("%u\n%u\n", -1234567, 777), 
+		ft_printf("%u\n%u\n", -1234567, 777));
 
 	printf("[PRINTF]%d [FT_PRINTF]%d \n", 
 		printf("pr %p\n", void_p), ft_printf("ft %p\n", void_p));
@@ -69,28 +69,27 @@ int	main(void)
 		printf("pr %x\n", 0), ft_printf("ft %x\n", 0));
 }
 */
-
-int	ft_printf(const char *format, ...)
+int	ft_printf(const char *fmt, ...)
 {
 	va_list	args;
 	size_t	b_writ;
 
-	va_start(args, format);
-	if (!format)
+	va_start(args, fmt);
+	if (!fmt)
 		return (-1);
 	b_writ = 0;
-	while (*format)
+	while (*fmt)
 	{
-		if (*format == '%')
+		if (*fmt == '%')
 		{
-			format = ft_spec_conv(format, args, &b_writ);
+			fmt = ft_spec_conv(fmt, args, &b_writ);
 		}
 		else
 		{
-			write(1, &(*format), 1);
+			write(1, &(*fmt), 1);
 			b_writ++;
 		}
-		format++;
+		fmt++;
 	}
 	va_end(args);
 	return (b_writ);

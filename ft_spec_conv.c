@@ -18,75 +18,75 @@
  *
 */
 
-const char	*ft_spec_conv(const char *format, va_list args, size_t *b_writ)
+const char	*ft_spec_conv(const char *fmt, va_list args, size_t *b_writ)
 {
 	const char	*next_i;
-	char		flags[10];
+	char		flg[10];
 
-	ft_memset(flags, 0, sizeof(flags));
-	next_i = format + 1;
+	ft_memset(flg, 0, sizeof(flg));
+	next_i = fmt + 1;
 	while (*next_i == '#' || *next_i == ' ' || *next_i == '+')
 	{
 		if (*next_i == '#')
-			flags[0] = '#';
+			flg[0] = '#';
 		if (*next_i == ' ')
-			flags[1] = ' ';
+			flg[1] = ' ';
 		if (*next_i == '+')
-			flags[2] = '+';
+			flg[2] = '+';
 		next_i++;
 	}
 	if (*next_i == 'd' || *next_i == 'i' || *next_i == 'u')
-		conv_num(next_i, args, flags, b_writ);
+		conv_num(next_i, args, flg, b_writ);
 	else if (*next_i == 'p' || *next_i == 'x' || *next_i == 'X')
-		conv_hex(next_i, args, flags, b_writ);
+		conv_hex(next_i, args, flg, b_writ);
 	else if (*next_i == 's' || *next_i == 'c' || *next_i == '%')
 		conv_txt(next_i, args, b_writ);
 	return (next_i);
 }
 
-void	conv_num(const char *next_i, va_list args, char *flags, size_t *b_writ)
+void	conv_num(const char *next_i, va_list args, char *flg, size_t *b_writ)
 {
-	int	current_arg;
+	int				cur_arg_int;
+	unsigned int	cur_arg_unsigned_int;
 
+	cur_arg_int = 0;
+	cur_arg_unsigned_int = 0;
 	if (*next_i == 'i' || *next_i == 'd')
 	{
-		current_arg = va_arg(args, int);
-		if (flags[1] == ' ' && current_arg >= 0 && flags[2] != '+')
-		{
+		cur_arg_int = va_arg(args, int);
+		if (flg[1] == ' ' && cur_arg_int >= 0 && flg[2] != '+')
 			*b_writ += ft_putchar_fd_count(' ', 1);
-			*b_writ += ft_putnbr_fd_count(current_arg, 1);
-		}
-		else if (flags[2] == '+' && current_arg >= 0)
-		{
+		else if (flg[2] == '+' && cur_arg_int >= 0)
 			*b_writ += ft_putchar_fd_count('+', 1);
-			*b_writ += ft_putnbr_fd_count(current_arg, 1);
-		}
-		else
-			*b_writ += ft_putnbr_fd_count(current_arg, 1);
+		*b_writ += ft_putnbr_fd_count(cur_arg_int, 1);
 	}
 	else if (*next_i == 'u')
-		*b_writ += ft_putnbr_fd_count(va_arg(args, unsigned int), 1);
+	{
+		cur_arg_unsigned_int = (unsigned int)va_arg(args, unsigned int);
+		*b_writ += ft_put_ui_fd_count(cur_arg_unsigned_int, 1);
+	}
 }
 
-void	conv_hex(const char *next_i, va_list args, char *flags, size_t *b_writ)
+void	conv_hex(const char *next_i, va_list args, char *flg, size_t *b_writ)
 {
-	int		current_arg;
-	char	*hex_value;
+	unsigned long	cur_arg_long;
+	unsigned int	cur_arg_int;
+	char			*hex_value;
 
 	hex_value = NULL;
 	if (*next_i == 'p')
 	{
-		current_arg = va_arg(args, unsigned long);
-		hex_value = ft_itohex(hex_value, current_arg, 'p');
+		cur_arg_long = (unsigned long)va_arg(args, unsigned long);
+		hex_value = ft_itohex(hex_value, cur_arg_long, 'p');
 		*b_writ += ft_putstr_fd_count(hex_value, 1);
 	}
 	else if (*next_i == 'x' || *next_i == 'X')
 	{
-		current_arg = va_arg(args, unsigned int);
-		if (flags[0] == '#')
-			hex_value = ft_itohex(hex_value, current_arg, '#');
+		cur_arg_int = (unsigned int)va_arg(args, unsigned int);
+		if (flg[0] == '#')
+			hex_value = ft_itohex(hex_value, cur_arg_int, '#');
 		else
-			hex_value = ft_itohex(hex_value, current_arg, *next_i);
+			hex_value = ft_itohex(hex_value, cur_arg_int, *next_i);
 		*b_writ += ft_putstr_fd_count(hex_value, 1);
 	}
 	if (hex_value != NULL)
@@ -95,13 +95,23 @@ void	conv_hex(const char *next_i, va_list args, char *flags, size_t *b_writ)
 
 void	conv_txt(const char *next_i, va_list args, size_t *b_writ)
 {
+	int		cur_arg_int;
+	char	*cur_arg_str;
+
+	cur_arg_int = 0;
+	cur_arg_str = NULL;
 	if (*next_i == 'c')
 	{
-		*b_writ += ft_putchar_fd_count((char)va_arg(args, int), 1);
+		cur_arg_int = va_arg(args, int);
+		*b_writ += ft_putchar_fd_count((char)cur_arg_int, 1);
 	}
 	else if (*next_i == 's')
 	{
-		*b_writ += ft_putstr_fd_count(va_arg(args, char *), 1);
+		cur_arg_str = va_arg(args, char *);
+		if (cur_arg_str != NULL)
+			*b_writ += ft_putstr_fd_count(cur_arg_str, 1);
+		else
+			*b_writ += ft_putstr_fd_count("(null)", 1);
 	}
 	else if (*next_i == '%')
 	{

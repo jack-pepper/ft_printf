@@ -26,7 +26,8 @@ LIBFT_PATH = ./libft
 LIBFT = ./libft/libft.a
 
 ### Source files
-SRC = ft_printf.c \
+SRC = ft_printf.c ft_spec_conv.c ft_itohex.c ft_put_ui_fd_count.c \
+      ft_putchar_fd_count.c ft_putstr_fd_count.c ft_putnbr_fd_count.c \
 ##BONUS_SRC =
 
 ### Object files

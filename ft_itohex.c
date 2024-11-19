@@ -76,7 +76,7 @@ char	*hex_handle_zero(char *hex_value, char style)
 		hex_value[i + 4] = ')';
 		i = 4;
 	}
-	else if (style == '#')
+	if (style == '#')
 	{
 		hex_value[i + 1] = 'X';
 		hex_value[i + 2] = '0';
