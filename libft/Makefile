@@ -6,36 +6,43 @@
 #    By: mmalie <marvin@42.fr>                      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/11/14 09:35:38 by mmalie            #+#    #+#              #
-#    Updated: 2024/11/19 11:02:25 by mmalie           ###   ########.fr        #
+#    Updated: 2024/11/14 09:35:45 by mmalie           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 ### Name of the file obtained after compilation
-NAME = libftprintf.a
+NAME = libft.a
 
 ### Compilation settings
 CC=cc
-CFLAGS=-Wall -Wextra -Werror -I ./libft
+CFLAGS=-Wall -Wextra -Werror
 AR=ar
 ARFLAGS=-rcs
 
 ### Dependencies
-DEPS = ft_printf.h \
-
-LIBFT_PATH = ./libft
-LIBFT = ./libft/libft.a
+DEPS = libft.h
 
 ### Source files
-SRC = ft_printf.c \
-##BONUS_SRC =
+LIBC = ft_isalpha.c ft_isdigit.c ft_isalnum.c ft_isascii.c ft_isprint.c \
+ft_toupper.c ft_tolower.c ft_atoi.c ft_strlen.c ft_memset.c ft_bzero.c \
+ft_memcpy.c ft_memmove.c ft_strlcpy.c ft_strlcat.c ft_strchr.c ft_strrchr.c \
+ft_strncmp.c ft_memchr.c ft_memcmp.c ft_strnstr.c ft_strdup.c ft_calloc.c \
+ft_strrev.c
+
+EXTRA = ft_itoa.c ft_putchar_fd.c ft_putstr_fd.c ft_putendl_fd.c ft_putnbr_fd.c \
+ft_split.c ft_strjoin.c ft_strmapi.c ft_strtrim.c ft_substr.c ft_striteri.c
+
+BONUS_SRC = ft_lstnew.c ft_lstadd_front.c ft_lstsize.c ft_lstlast.c \
+ft_lstadd_back.c ft_lstdelone.c ft_lstclear.c ft_lstmap.c ft_lstiter.c
+
+MANDATORY_SRC = ${LIBC} ${EXTRA}
+ALL_SRC = ${MANDATORY_SRC} ${BONUS_SRC}
 
 ### Object files
-OBJ = $(SRC:.c=.o)
+MANDATORY_OBJ = $(MANDATORY_SRC:.c=.o)
+ALL_OBJ = $(ALL_SRC:.c=.o)
 
-##BONUS_SRC = ${SRC} ${BONUS_SRC}
-##ALL_OBJ = $(ALL_SRC:.c=.o)
-
-### Default rule (compile the executable)
+### Default rules (compile the executable)
 all: $(NAME)
 
 ### Compile .c files into .o files
@@ -43,30 +50,26 @@ all: $(NAME)
 # The -c flag asks the compiler not to link the files
 # and to produce only the object file.
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@ 
 
-### Main rule
-$(NAME): $(OBJ)
-	cd libft && make
-	cp $(LIBFT) $(NAME)
-	$(AR) $(ARFLAGS) $(NAME) $(OBJ)
+### Create a static library
+$(NAME): $(MANDATORY_OBJ)
+	$(AR) $(ARFLAGS) $(NAME) $(MANDATORY_OBJ)
 
 # Make bonus rule
-##bonus: $(ALL_OBJ)
-##	$(AR) $(ARFLAGS) $(NAME) $(ALL_OBJ)
+bonus: $(ALL_OBJ)
+	$(AR) $(ARFLAGS) $(NAME) $(ALL_OBJ)
 
 # Rule to clean (remove) the object files
 clean:
-	cd libft && make clean
-	rm -f $(OBJ)
+	rm -f $(ALL_OBJ)
 
 # Rule to clean (remove) the object files and the executable
 fclean: clean
-	cd libft && make fclean
 	rm -f $(NAME)
 
 # Rule to recompile everything (execute fclean, then re)
 re: fclean all
 
 # Shows that those targets are not files but commands
-.PHONY: all clean fclean re bonus libft
+.PHONY: all clean fclean re bonus
