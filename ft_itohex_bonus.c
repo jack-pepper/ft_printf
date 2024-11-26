@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_printf.h"
+#include "ft_printf_bonus.h"
 /* 
  * This set of functions converts an unsigned long number to hexadecimal.
  * A style parameter (input as a char) defines how the output looks like:

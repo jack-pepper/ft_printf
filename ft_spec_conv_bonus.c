@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "ft_printf.h"
+#include "ft_printf_bonus.h"
 /* 
  * This set of functions analyses ft_printf's args and outputs them depending
  * on the flags (#, <space> or +). While writing, it will update the number

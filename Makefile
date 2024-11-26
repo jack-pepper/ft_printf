@@ -20,7 +20,8 @@ AR=ar
 ARFLAGS=-rcs
 
 ### Dependencies
-DEPS = ft_printf.h \
+DEPS_SRC = ft_printf.h \
+DEPS_BONUS = ft_printf_bonus.h \
 
 LIBFT_PATH = ./libft
 LIBFT = ./libft/libft.a
@@ -28,13 +29,15 @@ LIBFT = ./libft/libft.a
 ### Source files
 SRC = ft_printf.c ft_spec_conv.c ft_itohex.c ft_put_ui_fd_count.c \
       ft_putchar_fd_count.c ft_putstr_fd_count.c ft_putnbr_fd_count.c \
-##BONUS_SRC =
+
+BONUS_SRC = ft_printf_bonus.c ft_spec_conv_bonus.c ft_itohex_bonus.c \
+	ft_put_ui_fd_count_bonus.c ft_putchar_fd_count_bonus.c \
+	ft_putstr_fd_count_bonus.c ft_putnbr_fd_count_bonus.c \
 
 ### Object files
 OBJ = $(SRC:.c=.o)
-
-##BONUS_SRC = ${SRC} ${BONUS_SRC}
-##ALL_OBJ = $(ALL_SRC:.c=.o)
+ALL_SRC = ${SRC} ${BONUS_SRC}
+ALL_OBJ = $(ALL_SRC:.c=.o)
 
 ### Default rule (compile the executable)
 all: $(NAME)
@@ -53,13 +56,15 @@ $(NAME): $(OBJ)
 	$(AR) $(ARFLAGS) $(NAME) $(OBJ)
 
 # Make bonus rule
-##bonus: $(ALL_OBJ)
-##	$(AR) $(ARFLAGS) $(NAME) $(ALL_OBJ)
+bonus: $(ALL_OBJ)
+	cd libft && make
+	cp $(LIBFT) $(NAME)
+	$(AR) $(ARFLAGS) $(NAME) $(ALL_OBJ)
 
 # Rule to clean (remove) the object files
 clean:
 	cd libft && make clean
-	rm -f $(OBJ)
+	rm -f $(OBJ) $(ALL_OBJ)
 
 # Rule to clean (remove) the object files and the executable
 fclean: clean
