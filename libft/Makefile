@@ -3,12 +3,13 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: mmalie <marvin@42.fr>                      +#+  +:+       +#+         #
+#    By: mmalie <mmalie@student.42nice.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2024/11/14 09:35:38 by mmalie            #+#    #+#              #
-#    Updated: 2024/11/14 09:35:45 by mmalie           ###   ########.fr        #
+#    Created: 2024/12/03 08:59:34 by mmalie            #+#    #+#              #
+#    Updated: 2024/12/03 09:00:31 by mmalie           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
+
 
 ### Name of the file obtained after compilation
 NAME = libft.a
